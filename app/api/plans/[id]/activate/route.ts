@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ensureDb, sql } from '@/lib/db';
+import { ensureDb, getDb } from '@/lib/db';
 
 // POST /api/plans/[id]/activate - Activate plan (track usage)
 export async function POST(
@@ -8,6 +8,7 @@ export async function POST(
 ) {
   try {
     await ensureDb();
+    const sql = getDb();
     
     const { id } = await params;
     

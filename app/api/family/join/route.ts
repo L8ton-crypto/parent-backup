@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ensureDb, sql } from '@/lib/db';
+import { ensureDb, getDb } from '@/lib/db';
 
 // POST /api/family/join - Join existing family with code
 export async function POST(request: NextRequest) {
   try {
     await ensureDb();
+    const sql = getDb();
     
     const { code } = await request.json();
     

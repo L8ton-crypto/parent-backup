@@ -1,11 +1,14 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.DATABASE_URL!);
+function getSql() {
+  return neon(process.env.DATABASE_URL!);
+}
 
 let initialized = false;
 
 export async function ensureDb() {
   if (initialized) return;
+  const sql = getSql();
   
   try {
     // Create families table
@@ -102,4 +105,4 @@ export async function ensureDb() {
   }
 }
 
-export { sql };
+export { getSql as getDb };

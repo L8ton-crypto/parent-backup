@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ensureDb, sql } from '@/lib/db';
+import { ensureDb, getDb } from '@/lib/db';
 
 // GET /api/scenarios?familyId=X - Get all scenarios (templates + family custom)
 export async function GET(request: NextRequest) {
   try {
     await ensureDb();
+    const sql = getDb();
     
     const { searchParams } = new URL(request.url);
     const familyId = searchParams.get('familyId');
@@ -43,6 +44,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await ensureDb();
+    const sql = getDb();
     
     const { familyId, category, title, description, icon } = await request.json();
     

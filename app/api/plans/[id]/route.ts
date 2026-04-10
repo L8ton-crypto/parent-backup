@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ensureDb, sql } from '@/lib/db';
+import { ensureDb, getDb } from '@/lib/db';
 
 // PUT /api/plans/[id] - Update plan
 export async function PUT(
@@ -8,6 +8,7 @@ export async function PUT(
 ) {
   try {
     await ensureDb();
+    const sql = getDb();
     
     const { id } = await params;
     const { title, priority, steps, contacts, notes } = await request.json();
@@ -46,6 +47,7 @@ export async function DELETE(
 ) {
   try {
     await ensureDb();
+    const sql = getDb();
     
     const { id } = await params;
     

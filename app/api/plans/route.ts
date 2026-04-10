@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ensureDb, sql } from '@/lib/db';
+import { ensureDb, getDb } from '@/lib/db';
 
 // GET /api/plans?scenarioId=X&familyId=Y - Get plans for a scenario (filtered by family)
 // GET /api/plans?planId=X&familyId=Y - Get a single plan by ID
 export async function GET(request: NextRequest) {
   try {
     await ensureDb();
+    const sql = getDb();
     
     const { searchParams } = new URL(request.url);
     const scenarioId = searchParams.get('scenarioId');
@@ -51,6 +52,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await ensureDb();
+    const sql = getDb();
     
     const { scenarioId, familyId, title, priority, steps, contacts, notes } = await request.json();
     
