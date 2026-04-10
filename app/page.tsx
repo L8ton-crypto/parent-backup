@@ -1,65 +1,176 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const [isJoining, setIsJoining] = useState(false);
+  const [familyName, setFamilyName] = useState('');
+  const [familyCode, setFamilyCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const router = useRouter();
+
+  const createFamily = async () => {
+    if (!familyName.trim()) {
+      setError('Please enter a family name');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/family', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: familyName }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create family');
+      }
+
+      const family = await response.json();
+      localStorage.setItem('familyId', family.id);
+      localStorage.setItem('familyCode', family.code);
+      router.push('/dashboard');
+    } catch (err) {
+      setError('Failed to create family. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const joinFamily = async () => {
+    if (!familyCode.trim()) {
+      setError('Please enter a family code');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/family/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: familyCode }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Invalid family code');
+        }
+        throw new Error('Failed to join family');
+      }
+
+      const family = await response.json();
+      localStorage.setItem('familyId', family.id);
+      localStorage.setItem('familyCode', family.code);
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Failed to join family. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
+      <div className="max-w-md w-full space-y-8 text-center">
+        {/* Header */}
+        <div className="space-y-4">
+          <div className="text-6xl">🆘</div>
+          <h1 className="text-4xl font-bold tracking-tight">
+            Parent Backup Plan
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl text-gray-300">
+            Emergency backup plans for every parenting scenario.
+            <br />
+            <span className="text-blue-400 font-semibold">Be prepared, not panicked.</span>
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {error && (
+          <div className="bg-red-900/50 border border-red-500 rounded-lg p-3 text-red-200">
+            {error}
+          </div>
+        )}
+
+        {/* Main Actions */}
+        <div className="space-y-6">
+          {!isJoining ? (
+            // Create Family Flow
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="Enter your family name"
+                value={familyName}
+                onChange={(e) => setFamilyName(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-lg"
+                disabled={loading}
+              />
+              <button
+                onClick={createFamily}
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-lg"
+              >
+                {loading ? 'Creating...' : 'Create Family Backup Plan'}
+              </button>
+            </div>
+          ) : (
+            // Join Family Flow
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="Enter family code (PLAN-XXXX)"
+                value={familyCode}
+                onChange={(e) => setFamilyCode(e.target.value.toUpperCase())}
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-lg text-center font-mono"
+                disabled={loading}
+              />
+              <button
+                onClick={joinFamily}
+                disabled={loading}
+                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-lg"
+              >
+                {loading ? 'Joining...' : 'Join Family'}
+              </button>
+            </div>
+          )}
+
+          {/* Toggle between create/join */}
+          <button
+            onClick={() => {
+              setIsJoining(!isJoining);
+              setError('');
+              setFamilyName('');
+              setFamilyCode('');
+            }}
+            className="text-gray-400 hover:text-white underline"
+            disabled={loading}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {isJoining ? 'New here? Create a family plan' : 'Already have a family code? Join instead'}
+          </button>
         </div>
-      </main>
+
+        {/* Features */}
+        <div className="pt-8 space-y-4 text-sm text-gray-400">
+          <div className="flex items-center justify-center gap-2">
+            <span>⚡</span>
+            <span>3-tap emergency access</span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <span>📱</span>
+            <span>One-tap calling</span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <span>📋</span>
+            <span>Ready-made checklists</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
